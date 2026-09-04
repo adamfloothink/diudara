@@ -1,0 +1,160 @@
+:root {
+  /* === Udara: Langit & Sinyal === */
+  --langit: #2b4c6f;
+  --langit-light: #3e6690;
+  --langit-dark: #1a3350;
+  --sinyal: #e8873e;
+  --sinyal-light: #f2a868;
+  --kabut: #93a8c2;
+  --awan: #f4f7fa;
+  --hijau-lepas: #4c8b6e;
+  --merah-senja: #c1543d;
+
+  --ink-900: #16283a;
+  --ink-700: #35526b;
+  --ink-500: #6c8298;
+  --ink-300: #a9b7c4;
+  --ink-150: #dce3e8;
+  --ink-100: #edf1f3;
+  --surface: #ffffff;
+
+  --success-bg: #e5f1ea;
+  --danger-bg: #f7e7e1;
+  --warning-bg: #fceedc;
+
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+
+  --shadow-card: 0 1px 2px rgba(22, 40, 58, 0.05), 0 8px 24px rgba(22, 40, 58, 0.07);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--awan);
+  color: var(--ink-900);
+  font-family: var(--font-body);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  margin: 0;
+  color: var(--ink-900);
+}
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button { font-family: var(--font-body); cursor: pointer; }
+input, select, textarea { font-family: var(--font-body); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--ink-150); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- shared component classes ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--ink-150);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 11px;
+  border: none;
+  padding: 10px 18px;
+  transition: transform 0.05s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--sinyal); color: var(--ink-900); }
+.btn-primary:hover { opacity: 0.92; }
+.btn-secondary { background: var(--langit); color: var(--awan); }
+.btn-secondary:hover { opacity: 0.92; }
+.btn-ghost { background: transparent; color: var(--langit); border: 1.5px solid var(--ink-150); }
+.btn-ghost:hover { background: var(--ink-100); }
+.btn-danger { background: var(--danger-bg); color: var(--merah-senja); }
+.btn-sm { padding: 7px 13px; font-size: 13px; border-radius: 9px; }
+.btn-block { width: 100%; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+.badge-active { background: var(--success-bg); color: #2e6248; }
+.badge-active .dot { background: var(--hijau-lepas); }
+.badge-pending { background: var(--warning-bg); color: #9a5b18; }
+.badge-pending .dot { background: var(--sinyal); }
+.badge-churn { background: var(--danger-bg); color: #93412c; }
+.badge-churn .dot { background: var(--merah-senja); }
+.badge-neutral { background: var(--ink-100); color: var(--ink-700); }
+
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--kabut);
+  flex-shrink: 0;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 13px;
+  border-radius: 10px;
+  border: 1.5px solid var(--ink-150);
+  background: var(--awan);
+  color: var(--ink-900);
+  font-size: 14px;
+}
+.input:focus {
+  outline: 2px solid var(--sinyal);
+  outline-offset: 1px;
+  border-color: var(--sinyal);
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--sinyal);
+  color: var(--ink-900);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+.live-badge .dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--ink-900);
+  animation: pulse 1.6s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(22,40,58,0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(22,40,58,0); }
+  100% { box-shadow: 0 0 0 0 rgba(22,40,58,0); }
+}
+
+.scrollbar-none::-webkit-scrollbar { display: none; }
