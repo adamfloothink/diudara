@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import { communities, tiers, paymentMethods } from "../data/mock";
+import Header from "../components/layout/Header";
 
 type Step = "tier" | "payment" | "success";
 
@@ -16,25 +19,10 @@ export default function Checkout() {
   const tier = tiers.find((t) => t.id === selectedTier)!;
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", padding: "48px 24px" }}>
+    <>
+      <Header title={`Checkout — ${community.name}`} subtitle={`${community.members} member · ${community.category}`} insetDivider={false} />
+      <div style={{ display: "flex", justifyContent: "center", padding: 20 }}>
       <div style={{ width: "100%", maxWidth: 620 }}>
-        {/* Community header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
-          <div
-            style={{
-              width: 52, height: 52, borderRadius: 14, background: community.color,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#fff", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700,
-            }}
-          >
-            {community.name.charAt(0)}
-          </div>
-          <div>
-            <h2 style={{ fontSize: 19, fontWeight: 600 }}>{community.name}</h2>
-            <p style={{ fontSize: 13, color: "var(--ink-500)" }}>{community.members} member · {community.category}</p>
-          </div>
-        </div>
-
         {/* Step indicator */}
         {step !== "success" && (
           <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
@@ -67,9 +55,9 @@ export default function Checkout() {
                 <div
                   key={t.id}
                   onClick={() => setSelectedTier(t.id)}
-                  className="card"
+                  className="card card-clickable"
                   style={{
-                    padding: 20, cursor: "pointer", position: "relative",
+                    padding: 20, position: "relative",
                     border: selectedTier === t.id ? "2px solid var(--sinyal)" : "1px solid var(--ink-150)",
                   }}
                 >
@@ -87,7 +75,7 @@ export default function Checkout() {
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {t.benefits.map((b, i) => (
                       <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "var(--ink-700)" }}>
-                        <span style={{ color: "var(--hijau-lepas)" }}>✓</span>{b}
+                        <span style={{ color: "var(--hijau-lepas)" }}><FontAwesomeIcon icon={faCheck} /></span>{b}
                       </div>
                     ))}
                   </div>
@@ -108,9 +96,9 @@ export default function Checkout() {
                 <div
                   key={m.id}
                   onClick={() => setMethod(m.id)}
-                  className="card"
+                  className="card card-clickable"
                   style={{
-                    padding: 16, cursor: "pointer", display: "flex", alignItems: "center", gap: 14,
+                    padding: 16, display: "flex", alignItems: "center", gap: 14,
                     border: method === m.id ? "2px solid var(--sinyal)" : "1px solid var(--ink-150)",
                   }}
                 >
@@ -153,8 +141,8 @@ export default function Checkout() {
         {/* STEP: success */}
         {step === "success" && (
           <div className="card" style={{ padding: 36, textAlign: "center" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--success-bg)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", fontSize: 28 }}>
-              ✅
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--success-bg)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", fontSize: 26, color: "var(--hijau-lepas)" }}>
+              <FontAwesomeIcon icon={faCheck} />
             </div>
             <h2 style={{ fontSize: 21, fontWeight: 600, marginBottom: 8 }}>Pembayaran berhasil</h2>
             <p style={{ fontSize: 14, color: "var(--ink-500)", marginBottom: 24, lineHeight: 1.55 }}>
@@ -166,6 +154,7 @@ export default function Checkout() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

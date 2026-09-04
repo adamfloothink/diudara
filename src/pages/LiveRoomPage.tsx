@@ -1,5 +1,15 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faEye,
+  faMicrophone,
+  faMicrophoneSlash,
+  faVideo,
+  faVideoSlash,
+  faPhoneSlash,
+} from "@fortawesome/free-solid-svg-icons";
 import { communities, liveParticipants } from "../data/mock";
 import Avatar from "../components/ui/Avatar";
 
@@ -32,14 +42,16 @@ export default function LiveRoomPage() {
           <button
             onClick={() => navigate(`/community/${community.id}`)}
             className="btn btn-ghost btn-sm"
-            style={{ color: "#fff", border: "1.5px solid rgba(255,255,255,0.2)" }}
+            style={{ color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
           >
-            ← Keluar
+            <FontAwesomeIcon icon={faArrowLeft} /> Keluar
           </button>
           <span className="live-badge"><span className="dot"></span>LIVE</span>
           <span style={{ fontSize: 14, fontWeight: 600 }}>{community.name} — Sesi Q&amp;A Malam</span>
         </div>
-        <span style={{ fontSize: 13, color: "#9CACC0" }}>👁 {community.liveViewers ?? 84} menonton</span>
+        <span style={{ fontSize: 13, color: "#9CACC0" }}>
+          <FontAwesomeIcon icon={faEye} /> {community.liveViewers ?? 84} menonton
+        </span>
       </div>
 
       <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 320px", minHeight: 0 }}>
@@ -72,7 +84,11 @@ export default function LiveRoomPage() {
               >
                 <Avatar initials={p.name.split(" ").map((w) => w[0]).slice(0, 2).join("")} size={34} />
                 <span style={{ fontSize: 11.5, fontWeight: 500 }}>{p.name}</span>
-                {p.muted && <span style={{ position: "absolute", top: 6, right: 8, fontSize: 12 }}>🔇</span>}
+                {p.muted && (
+                  <span style={{ position: "absolute", top: 6, right: 8, fontSize: 11 }}>
+                    <FontAwesomeIcon icon={faMicrophoneSlash} />
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -84,21 +100,21 @@ export default function LiveRoomPage() {
               className="btn"
               style={{ background: muted ? "rgba(255,255,255,0.1)" : "var(--hijau-lepas)", color: "#fff", borderRadius: 999, width: 48, height: 48, padding: 0 }}
             >
-              {muted ? "🔇" : "🎤"}
+              <FontAwesomeIcon icon={muted ? faMicrophoneSlash : faMicrophone} />
             </button>
             <button
               onClick={() => setCamOn(!camOn)}
               className="btn"
               style={{ background: camOn ? "var(--hijau-lepas)" : "rgba(255,255,255,0.1)", color: "#fff", borderRadius: 999, width: 48, height: 48, padding: 0 }}
             >
-              {camOn ? "🎥" : "📷"}
+              <FontAwesomeIcon icon={camOn ? faVideo : faVideoSlash} />
             </button>
             <button
               onClick={() => navigate(`/community/${community.id}`)}
               className="btn"
               style={{ background: "var(--merah-senja)", color: "#fff", borderRadius: 999, width: 48, height: 48, padding: 0 }}
             >
-              ✕
+              <FontAwesomeIcon icon={faPhoneSlash} />
             </button>
           </div>
         </div>

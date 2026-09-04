@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck, faCircle, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import Header from "../components/layout/Header";
 
 type Msg = { from: "bot" | "user"; text: string };
 
@@ -48,24 +51,10 @@ export default function PulseOnboarding() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", padding: "40px 24px", background: "var(--awan)" }}>
+    <>
+      <Header title="Pulse-ID" subtitle="AI co-builder — setup komunitas dalam Bahasa Indonesia" insetDivider={false} />
+      <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", padding: 20, background: "var(--awan)" }}>
       <div style={{ width: "100%", maxWidth: 620, display: "flex", flexDirection: "column" }}>
-        {/* header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-          <div
-            style={{
-              width: 40, height: 40, borderRadius: 12, background: "var(--langit)",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
-            }}
-          >
-            ✨
-          </div>
-          <div>
-            <h2 style={{ fontSize: 17, fontWeight: 600 }}>Pulse-ID</h2>
-            <p style={{ fontSize: 12.5, color: "var(--ink-500)" }}>AI co-builder — setup komunitas dalam Bahasa Indonesia</p>
-          </div>
-        </div>
-
         {/* chat */}
         <div className="card" style={{ padding: 22, display: "flex", flexDirection: "column", gap: 12, minHeight: 380 }}>
           {messages.map((m, i) => (
@@ -92,7 +81,10 @@ export default function PulseOnboarding() {
             <div style={{ alignSelf: "flex-start", display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
               {summarySteps.map((s, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: i < buildStep ? "var(--hijau-lepas)" : "var(--ink-300)" }}>
-                  <span>{i < buildStep ? "✓" : "○"}</span>{s}
+                  <span style={{ fontSize: i < buildStep ? 12 : 8 }}>
+                    <FontAwesomeIcon icon={i < buildStep ? faCheck : faCircle} />
+                  </span>
+                  {s}
                 </div>
               ))}
             </div>
@@ -110,17 +102,18 @@ export default function PulseOnboarding() {
 
           {done && !building && (
             <div style={{ marginTop: 12, padding: 16, borderRadius: 12, background: "var(--success-bg)" }}>
-              <p style={{ fontSize: 13.5, fontWeight: 600, color: "#2E6248", marginBottom: 4 }}>Komunitas siap dibagikan! 🎉</p>
+              <p style={{ fontSize: 13.5, fontWeight: 600, color: "#2E6248", marginBottom: 4 }}>Komunitas siap dibagikan!</p>
               <p style={{ fontSize: 13, color: "var(--ink-700)", marginBottom: 14 }}>
                 Halaman checkout, welcome message, dan struktur channel sudah dibuatkan otomatis. Kamu bisa sesuaikan lagi kapan saja.
               </p>
               <button className="btn btn-primary" onClick={() => navigate("/creator/dashboard")}>
-                Buka dashboard creator →
+                Buka dashboard creator <FontAwesomeIcon icon={faArrowRight} />
               </button>
             </div>
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

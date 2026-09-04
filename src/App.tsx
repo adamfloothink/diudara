@@ -24,7 +24,8 @@ export default function App() {
               <Routes>
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/community/:id" element={<CommunityHome />} />
-                <Route path="/creator/dashboard" element={<CreatorDashboard />} />
+                <Route path="/creator/dashboard/:id" element={<CreatorDashboard />} />
+                <Route path="/creator/dashboard" element={<Navigate to="/creator/dashboard/bimbel-sbmptn" replace />} />
                 <Route path="*" element={<Navigate to="/discover" replace />} />
               </Routes>
             </AppShell>
