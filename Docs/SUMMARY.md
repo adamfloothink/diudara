@@ -6,16 +6,26 @@
 
 ## Status saat ini
 
-Halaman yang sudah ada: Discover, Community Home (tab Feed/Konten/Anggota/Kalender/
-Pengumuman/Dokumen), Live Room, Checkout, Creator Dashboard (per-komunitas, route
+Halaman yang sudah ada: Discover, Community Home (tab Feed/Materi/Anggota/Kegiatan/
+Pengumuman/Dokumen — rename dari Konten/Kalender), Discussion Detail, Event Detail,
+Announcement Detail, Live Room, Checkout, Creator Dashboard (per-komunitas, route
 `/creator/dashboard/:id`), Pulse-ID Onboarding. Semua data dummy di `src/data/mock.ts`.
-Sudah deploy ke Vercel (`diudara.vercel.app`).
+Sudah deploy ke Vercel (`diudara.vercel.app`) — production ter-update per commit
+`7315be9`.
+
+Tab Feed di Community Home sekarang unified post stream 5 tipe (diskusi/materi/
+kegiatan/pengumuman/anggota) lewat `FeedPostCard` + `PostEditorModal`
+(`src/components/feed/`): edit/hapus/share per post, tag & silabus grouping (khusus
+Materi), attachment image/video/audio/file, emoji. Materi/Kegiatan/Pengumuman hanya
+bisa dibuat admin (creator komunitas). Ada floating private chat global
+(`src/components/chat/FloatingChat.tsx`, dipasang di `AppShell`) gaya LinkedIn — bisa
+dibuka dari ikon chat di kartu member tab Anggota.
 
 Design system global sudah dibangun: `Sidebar` (bisa collapse, dropdown submenu
 Komunitas/Dashboard Creator), `Header` (judul + breadcrumb + notifikasi + avatar,
 opsional `insetDivider`), `PageContainer` — semua di `src/components/layout/`. Ikon
-pakai Font Awesome (emoji cuma dipakai di chat). Logo & favicon di `src/assets/`
-(`logo-dark/light.svg`, `icon-dark/light.svg`).
+pakai Font Awesome (emoji cuma dipakai di chat & picker emoji). Logo & favicon di
+`src/assets/` (`logo-dark/light.svg`, `icon-dark/light.svg`).
 
 ## Sedang dikerjakan
 
