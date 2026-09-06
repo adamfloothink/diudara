@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -8,29 +8,41 @@ import {
   faHeadphones,
   faClipboardQuestion,
   faComment,
-  faUserPlus,
   faCalendarDay,
   faGraduationCap,
   faBullhorn,
   faFile,
   faDownload,
   faPlay,
+  faXmark,
+  faFilter,
+  faArrowUpWideShort,
+  faPlus,
+  faUserPlus,
+  faShareNodes,
+  faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   communities,
-  forumPosts,
   contentLibrary,
   members,
-  upcomingEvents,
   calendarSchedule,
   announcements,
   libraryFiles,
+  feedPosts as initialFeedPosts,
+  myCreatedCommunityIds,
+  currentUser,
+  type FeedPost,
+  type FeedPostType,
 } from "../data/mock";
 import Avatar from "../components/ui/Avatar";
 import Header from "../components/layout/Header";
 import PageContainer from "../components/layout/PageContainer";
+import { OPEN_CHAT_EVENT } from "../components/chat/FloatingChat";
+import FeedPostCard from "../components/feed/FeedPostCard";
+import PostEditorModal from "../components/feed/PostEditorModal";
 
-const tabs = ["Feed", "Konten", "Anggota", "Kalender", "Pengumuman", "Dokumen"] as const;
+const tabs = ["Feed", "Materi", "Anggota", "Kegiatan", "Pengumuman", "Dokumen"] as const;
 type Tab = (typeof tabs)[number];
 
 const typeIcon: Record<string, IconDefinition> = { video: faVideo, ebook: faFileLines, audio: faHeadphones, quiz: faClipboardQuestion };
@@ -62,18 +74,108 @@ calendarSchedule.forEach((item) => {
   (scheduleByDay[day] ??= []).push(item);
 });
 
-// Warna komunitas yang cukup terang untuk butuh teks gelap di atasnya
-const lightBrandColors = ["var(--sinyal)", "var(--sinyal-light)", "var(--kabut)"];
+function slugifyName(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+function openMemberChat(name: string) {
+  window.dispatchEvent(
+    new CustomEvent(OPEN_CHAT_EVENT, {
+      detail: {
+        id: slugifyName(name),
+        name,
+        initials: name.split(" ").map((w) => w[0]).slice(0, 2).join(""),
+      },
+    })
+  );
+}
+
+const initialFeedTags = Array.from(new Set(initialFeedPosts.map((p) => p.tag)));
 
 export default function CommunityHome() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("Feed");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab");
+  const [tab, setTab] = useState<Tab>((tabs as readonly string[]).includes(initialTab ?? "") ? (initialTab as Tab) : "Feed");
+  const [feedTagFilter, setFeedTagFilter] = useState("Semua");
+  const [feedSort, setFeedSort] = useState<"terbaru" | "populer">("terbaru");
+  const [feedFilterModalOpen, setFeedFilterModalOpen] = useState(false);
+  const [topicOptions, setTopicOptions] = useState(initialFeedTags);
+  const addTopicOption = (value: string) => setTopicOptions((prev) => (prev.includes(value) ? prev : [...prev, value]));
+  const [syllabusOptions, setSyllabusOptions] = useState(() => contentLibrary.map((w) => w.title));
+  const addSyllabusOption = (value: string) => setSyllabusOptions((prev) => (prev.includes(value) ? prev : [...prev, value]));
+  const [topicFilter, setTopicFilter] = useState(searchParams.get("topic"));
+  const clearTopicFilter = () => {
+    setTopicFilter(null);
+    const next = new URLSearchParams(searchParams);
+    next.delete("topic");
+    setSearchParams(next, { replace: true });
+  };
+  const [feedSearchQuery, setFeedSearchQuery] = useState("");
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteSent, setInviteSent] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const sendInvite = () => {
+    if (!inviteEmail.trim()) return;
+    setInviteSent(true);
+    setTimeout(() => {
+      setInviteModalOpen(false);
+      setInviteSent(false);
+      setInviteEmail("");
+    }, 1200);
+  };
+  const shareCommunityLink = () => {
+    navigator.clipboard?.writeText(`${window.location.origin}/community/${id}`).catch(() => {});
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 1500);
+  };
+
   const community = communities.find((c) => c.id === id) ?? communities[0];
-  const isLightBanner = lightBrandColors.includes(community.color);
-  const bannerText = isLightBanner ? "var(--ink-900)" : "var(--awan)";
-  const bannerOverlay = isLightBanner ? "rgba(22,40,58,0.12)" : "rgba(255,255,255,0.18)";
-  const bannerOverlayBorder = isLightBanner ? "rgba(22,40,58,0.25)" : "rgba(255,255,255,0.4)";
+  const isAdmin = myCreatedCommunityIds.includes(community.id);
+
+  // Feed — post gabungan (diskusi/pengumuman/materi/kegiatan/anggota)
+  const [posts, setPosts] = useState<FeedPost[]>(initialFeedPosts);
+  const [editorState, setEditorState] = useState<{ mode: "create" | "edit"; post?: FeedPost; defaultType?: FeedPostType } | null>(null);
+
+  const savePost = (post: FeedPost) => {
+    setPosts((prev) => {
+      const exists = prev.some((p) => p.id === post.id);
+      return exists ? prev.map((p) => (p.id === post.id ? post : p)) : [post, ...prev];
+    });
+    if (!topicOptions.includes(post.tag)) addTopicOption(post.tag);
+    if (post.syllabus && !syllabusOptions.includes(post.syllabus)) addSyllabusOption(post.syllabus);
+    setEditorState(null);
+  };
+
+  const deletePost = (postId: string) => {
+    if (!window.confirm("Hapus post ini?")) return;
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
+
+  const sharePost = (post: FeedPost) => {
+    const url = `${window.location.origin}/community/${community.id}/${post.linkTo ?? ""}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+  };
+
+  const openPost = (post: FeedPost) => {
+    if (!post.linkTo) return;
+    if (post.linkTo.startsWith("?")) {
+      navigate(`/community/${community.id}${post.linkTo}`);
+    } else {
+      navigate(`/community/${community.id}/${post.linkTo}`);
+    }
+  };
+
+  const filteredFeedPosts = posts
+    .filter((p) => feedTagFilter === "Semua" || p.tag === feedTagFilter)
+    .filter((p) => !topicFilter || `${p.title} ${p.body} ${p.tag}`.toLowerCase().includes(topicFilter.toLowerCase()))
+    .filter((p) => !feedSearchQuery.trim() || `${p.title} ${p.body} ${p.tag} ${p.author}`.toLowerCase().includes(feedSearchQuery.trim().toLowerCase()))
+    .sort((a, b) => (feedSort === "populer" ? b.replies - a.replies : 0));
+  const bannerText = "var(--awan)";
+  const bannerOverlay = "rgba(255,255,255,0.18)";
+  const bannerOverlayBorder = "rgba(255,255,255,0.4)";
   const hasNewAnnouncement = announcements.some((a) => a.isNew);
   const [selectedContent, setSelectedContent] = useState({ weekId: contentLibrary[0].id, itemIndex: 0 });
   const selectedWeek = contentLibrary.find((w) => w.id === selectedContent.weekId) ?? contentLibrary[0];
@@ -97,7 +199,7 @@ export default function CommunityHome() {
             marginBottom: 9,
             padding: 24,
             overflow: "hidden",
-            background: `linear-gradient(120deg, ${community.color}, var(--langit-dark))`,
+            background: "linear-gradient(120deg, var(--langit), var(--langit-dark))",
             color: bannerText,
           }}
         >
@@ -127,14 +229,6 @@ export default function CommunityHome() {
               <p style={{ fontSize: 13.5, opacity: 0.85, marginTop: 2 }}>{community.members} member · {community.category}</p>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button
-                aria-label="Undang member"
-                title="Undang member"
-                className="btn btn-ghost btn-icon"
-                style={{ color: bannerText, border: `1px solid ${bannerOverlayBorder}` }}
-              >
-                <FontAwesomeIcon icon={faUserPlus} />
-              </button>
               <button className="btn btn-primary" onClick={() => navigate(`/checkout/${community.id}`)}>
                 {community.price === "Gratis" ? "Gabung gratis" : `Gabung — ${community.price}${community.billing}`}
               </button>
@@ -143,70 +237,257 @@ export default function CommunityHome() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--ink-150)", marginBottom: 28 }}>
-          {tabs.map((t) => (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, borderBottom: "1px solid var(--ink-150)", marginBottom: 28 }}>
+          <div style={{ display: "flex", gap: 4, overflowX: "auto" }} className="scrollbar-none">
+            {tabs.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                style={{
+                  background: "none", border: "none", padding: "12px 18px",
+                  fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6,
+                  color: tab === t ? "var(--langit)" : "var(--ink-500)",
+                  borderBottom: tab === t ? "2px solid var(--sinyal)" : "2px solid transparent",
+                  whiteSpace: "nowrap", flexShrink: 0,
+                }}
+              >
+                {t}
+                {t === "Pengumuman" && hasNewAnnouncement && (
+                  <span
+                    style={{
+                      fontSize: 10, fontWeight: 700, color: "#fff", background: "var(--merah-senja)",
+                      borderRadius: 999, padding: "1px 6px",
+                    }}
+                  >
+                    Baru
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, flexShrink: 0 }}>
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              aria-label="Undang anggota"
+              title="Undang anggota"
+              onClick={() => setInviteModalOpen(true)}
+              className="btn btn-ghost btn-icon"
+              style={{ width: 36, height: 36, fontSize: 13 }}
+            >
+              <FontAwesomeIcon icon={faUserPlus} />
+            </button>
+            <button
+              aria-label="Bagikan link komunitas"
+              title="Bagikan link komunitas"
+              onClick={shareCommunityLink}
+              className="btn btn-ghost btn-icon"
+              style={{ width: 36, height: 36, fontSize: 13 }}
+            >
+              <FontAwesomeIcon icon={linkCopied ? faCheck : faShareNodes} />
+            </button>
+            <button
+              onClick={() => setEditorState({ mode: "create" })}
+              className="btn btn-sm"
               style={{
-                background: "none", border: "none", padding: "12px 18px",
-                fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6,
-                color: tab === t ? "var(--langit)" : "var(--ink-500)",
-                borderBottom: tab === t ? "2px solid var(--sinyal)" : "2px solid transparent",
+                flexShrink: 0, background: "var(--hijau-lepas)", color: "var(--awan)",
+                paddingTop: 7, paddingBottom: 7, paddingLeft: 14, paddingRight: 7,
               }}
             >
-              {t}
-              {t === "Pengumuman" && hasNewAnnouncement && (
-                <span
-                  style={{
-                    fontSize: 10, fontWeight: 700, color: "#fff", background: "var(--merah-senja)",
-                    borderRadius: 999, padding: "1px 6px",
-                  }}
-                >
-                  Baru
-                </span>
-              )}
+              Posting
+              <span
+                style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.25)", fontSize: 10,
+                }}
+              >
+                <FontAwesomeIcon icon={faPlus} />
+              </span>
             </button>
-          ))}
+          </div>
         </div>
+
+        {inviteModalOpen && (
+          <div
+            onClick={() => setInviteModalOpen(false)}
+            style={{
+              position: "fixed", inset: 0, background: "rgba(22,40,58,0.4)",
+              display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20,
+            }}
+          >
+            <div className="card" style={{ width: 380, padding: 24 }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700 }}>Undang anggota</h3>
+                <button
+                  aria-label="Tutup"
+                  onClick={() => setInviteModalOpen(false)}
+                  className="btn btn-ghost btn-icon"
+                  style={{ width: 28, height: 28, fontSize: 12 }}
+                >
+                  <FontAwesomeIcon icon={faXmark} />
+                </button>
+              </div>
+
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-500)", display: "block", marginBottom: 6 }}>
+                Email
+              </label>
+              <input
+                className="input"
+                type="email"
+                placeholder="nama@email.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendInvite()}
+                style={{ marginBottom: 16 }}
+              />
+
+              <button className="btn btn-primary btn-block" onClick={sendInvite} disabled={!inviteEmail.trim()}>
+                {inviteSent ? <><FontAwesomeIcon icon={faCheck} /> Undangan terkirim</> : "Kirim undangan"}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div style={{ display: "grid", gridTemplateColumns: tab === "Feed" ? "1fr 300px" : "1fr", gap: 20, paddingBottom: 60 }}>
           {/* Main column */}
           <div>
             {tab === "Feed" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div className="card" style={{ padding: 16, display: "flex", gap: 12, alignItems: "center" }}>
-                  <Avatar initials="RP" color="var(--sinyal)" />
-                  <input className="input" placeholder="Mulai diskusi baru..." style={{ background: "var(--awan)" }} />
+                {/* Pencarian + filter & sortir */}
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <input
+                    className="input"
+                    placeholder="Cari diskusi, topik, atau penulis..."
+                    value={feedSearchQuery}
+                    onChange={(e) => setFeedSearchQuery(e.target.value)}
+                    style={{ flex: 1, background: "var(--awan)" }}
+                  />
+                  <button
+                    aria-label="Filter topik"
+                    title="Filter topik"
+                    onClick={() => setFeedFilterModalOpen(true)}
+                    className="btn btn-ghost btn-icon"
+                    style={{ width: 32, height: 32, fontSize: 13, position: "relative", color: "var(--ink-500)" }}
+                  >
+                    <FontAwesomeIcon icon={faFilter} />
+                    {feedTagFilter !== "Semua" && (
+                      <span style={{ position: "absolute", top: 4, right: 4, width: 6, height: 6, borderRadius: "50%", background: "var(--sinyal)" }} />
+                    )}
+                  </button>
+                  <button
+                    aria-label="Sortir"
+                    title="Sortir"
+                    onClick={() => setFeedFilterModalOpen(true)}
+                    className="btn btn-ghost btn-icon"
+                    style={{ width: 32, height: 32, fontSize: 13, position: "relative", color: "var(--ink-500)" }}
+                  >
+                    <FontAwesomeIcon icon={faArrowUpWideShort} />
+                    {feedSort !== "terbaru" && (
+                      <span style={{ position: "absolute", top: 4, right: 4, width: 6, height: 6, borderRadius: "50%", background: "var(--sinyal)" }} />
+                    )}
+                  </button>
                 </div>
-                {forumPosts.map((p) => (
-                  <div key={p.id} className="card" style={{ padding: 20 }}>
-                    <div style={{ display: "flex", gap: 12 }}>
-                      <Avatar initials={p.author.split(" ").map((w) => w[0]).slice(0, 2).join("")} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                          <div>
-                            <span style={{ fontWeight: 600, fontSize: 14 }}>{p.author}</span>
-                            <span style={{ color: "var(--ink-300)", fontSize: 12.5 }}> · {p.time}</span>
-                          </div>
-                          {p.active && <span className="badge badge-active"><span className="dot"></span>Aktif</span>}
-                        </div>
-                        <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{p.title}</p>
-                        <p style={{ fontSize: 13.5, color: "var(--ink-700)", lineHeight: 1.55, marginBottom: 10 }}>{p.body}</p>
-                        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                          <span className="badge badge-neutral">{p.tag}</span>
-                          <span style={{ fontSize: 12.5, color: "var(--ink-500)" }}>
-                            <FontAwesomeIcon icon={faComment} /> {p.replies} balasan
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+
+                {topicFilter && (
+                  <span className="badge badge-neutral" style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start" }}>
+                    Topik: #{topicFilter}
+                    <button
+                      aria-label="Hapus filter topik"
+                      onClick={clearTopicFilter}
+                      style={{ background: "none", border: "none", cursor: "pointer", display: "flex", color: "inherit" }}
+                    >
+                      <FontAwesomeIcon icon={faXmark} />
+                    </button>
+                  </span>
+                )}
+
+                {filteredFeedPosts.length === 0 && (
+                  <p style={{ fontSize: 13, color: "var(--ink-500)" }}>Tidak ada diskusi yang cocok dengan filter ini.</p>
+                )}
+
+                {filteredFeedPosts.map((p) => (
+                  <FeedPostCard
+                    key={p.id}
+                    post={p}
+                    canManage={isAdmin || ((p.type === "diskusi" || p.type === "anggota") && p.author === currentUser.name)}
+                    onOpen={() => openPost(p)}
+                    onEdit={() => setEditorState({ mode: "edit", post: p })}
+                    onDelete={() => deletePost(p.id)}
+                    onShare={() => sharePost(p)}
+                  />
                 ))}
               </div>
             )}
 
-            {tab === "Konten" && (
+            {editorState && (
+              <PostEditorModal
+                mode={editorState.mode}
+                isAdmin={isAdmin}
+                initial={editorState.post}
+                defaultType={editorState.defaultType}
+                topicOptions={topicOptions}
+                onAddTopic={addTopicOption}
+                syllabusOptions={syllabusOptions}
+                onAddSyllabus={addSyllabusOption}
+                onClose={() => setEditorState(null)}
+                onSave={savePost}
+              />
+            )}
+
+            {feedFilterModalOpen && (
+              <div
+                onClick={() => setFeedFilterModalOpen(false)}
+                style={{
+                  position: "fixed", inset: 0, background: "rgba(22,40,58,0.4)",
+                  display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200,
+                }}
+              >
+                <div className="card" style={{ width: 320, padding: 24 }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700 }}>Filter &amp; Sortir</h3>
+                    <button
+                      aria-label="Tutup"
+                      onClick={() => setFeedFilterModalOpen(false)}
+                      className="btn btn-ghost btn-icon"
+                      style={{ width: 28, height: 28, fontSize: 12 }}
+                    >
+                      <FontAwesomeIcon icon={faXmark} />
+                    </button>
+                  </div>
+
+                  <p style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-500)", marginBottom: 8 }}>Topik</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22 }}>
+                    {["Semua", ...topicOptions].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setFeedTagFilter(t)}
+                        className="btn btn-sm"
+                        style={{
+                          background: feedTagFilter === t ? "var(--langit)" : "var(--surface)",
+                          color: feedTagFilter === t ? "var(--awan)" : "var(--ink-700)",
+                          border: feedTagFilter === t ? "none" : "1px solid var(--ink-150)",
+                        }}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+
+                  <p style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-500)", marginBottom: 8 }}>Urutkan</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
+                    {([{ v: "terbaru", label: "Terbaru" }, { v: "populer", label: "Terpopuler" }] as const).map((opt) => (
+                      <label key={opt.v} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                        <input type="radio" name="feedSort" checked={feedSort === opt.v} onChange={() => setFeedSort(opt.v)} />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+
+                  <button className="btn btn-primary btn-block" onClick={() => setFeedFilterModalOpen(false)}>Terapkan</button>
+                </div>
+              </div>
+            )}
+
+            {tab === "Materi" && (
               <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, alignItems: "start" }}>
                 {/* Menu konten */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -319,7 +600,7 @@ export default function CommunityHome() {
               </div>
             )}
 
-            {tab === "Kalender" && (
+            {tab === "Kegiatan" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Grid kalender bulanan */}
                 <div className="card" style={{ padding: 18 }}>
@@ -377,9 +658,11 @@ export default function CommunityHome() {
                                   <div
                                     key={idx}
                                     title={it.title}
+                                    onClick={() => navigate(`/community/${community.id}/event/${it.id}`)}
                                     style={{
                                       fontSize: 9.5, fontWeight: 600, color: "#fff", background: calendarTypeDot[it.type],
                                       borderRadius: 4, padding: "1px 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                      cursor: "pointer",
                                     }}
                                   >
                                     {it.title}
@@ -400,7 +683,12 @@ export default function CommunityHome() {
                 {/* Agenda mendatang */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {calendarSchedule.map((item, i) => (
-                    <div key={i} className="card" style={{ padding: 16, display: "flex", alignItems: "center", gap: 16 }}>
+                    <div
+                      key={i}
+                      onClick={() => navigate(`/community/${community.id}/event/${item.id}`)}
+                      className="card card-clickable"
+                      style={{ padding: 16, display: "flex", alignItems: "center", gap: 16 }}
+                    >
                       <div style={{ width: 52, textAlign: "center", flexShrink: 0 }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--sinyal)" }}>{item.month}</div>
                         <div style={{ fontSize: 20, fontWeight: 700, color: "var(--langit)" }}>{item.date}</div>
@@ -422,7 +710,12 @@ export default function CommunityHome() {
             {tab === "Pengumuman" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {announcements.map((a) => (
-                  <div key={a.id} className="card" style={{ padding: 20, position: "relative" }}>
+                  <div
+                    key={a.id}
+                    onClick={() => navigate(`/community/${community.id}/announcement/${a.id}`)}
+                    className="card card-clickable"
+                    style={{ padding: 20, position: "relative" }}
+                  >
                     {a.isNew && (
                       <span
                         className="badge badge-pending"
@@ -486,9 +779,20 @@ export default function CommunityHome() {
                         <p style={{ fontSize: 12.5, color: "var(--ink-500)" }}>{m.role} · {m.joined}</p>
                       </div>
                     </div>
-                    <span className={`badge ${statusBadge[m.status]}`}>
-                      <span className="dot"></span>{statusLabel[m.status]}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span className={`badge ${statusBadge[m.status]}`}>
+                        <span className="dot"></span>{statusLabel[m.status]}
+                      </span>
+                      <button
+                        aria-label={`Chat dengan ${m.name}`}
+                        title={`Chat dengan ${m.name}`}
+                        onClick={() => openMemberChat(m.name)}
+                        className="btn btn-ghost btn-icon"
+                        style={{ width: 32, height: 32, fontSize: 13, color: "var(--ink-500)" }}
+                      >
+                        <FontAwesomeIcon icon={faComment} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -506,11 +810,15 @@ export default function CommunityHome() {
               <div className="card" style={{ padding: 18 }}>
                 <h4 style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12, color: "var(--ink-700)" }}>Event mendatang</h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {upcomingEvents.map((e, i) => (
-                    <div key={i} style={{ display: "flex", gap: 12 }}>
+                  {calendarSchedule.filter((e) => e.type !== "materi").slice(0, 3).map((e) => (
+                    <div
+                      key={e.id}
+                      onClick={() => navigate(`/community/${community.id}/event/${e.id}`)}
+                      style={{ display: "flex", gap: 12, cursor: "pointer" }}
+                    >
                       <div style={{ width: 40, textAlign: "center", flexShrink: 0 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--sinyal)" }}>{e.date.split(" ")[1]}</div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--langit)" }}>{e.date.split(" ")[0]}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--sinyal)" }}>{e.month}</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--langit)" }}>{e.date}</div>
                       </div>
                       <div>
                         <p style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.35 }}>{e.title}</p>

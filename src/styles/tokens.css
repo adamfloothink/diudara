@@ -94,6 +94,10 @@ input, select, textarea { font-family: var(--font-body); }
   box-shadow: var(--shadow-card);
 }
 
+/* List item hover — subtle background only, no shadow/lift */
+.hover-bg { transition: background 0.12s ease; }
+.hover-bg:hover { background: var(--awan); }
+
 .btn {
   display: inline-flex;
   align-items: center;

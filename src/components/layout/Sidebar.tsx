@@ -67,13 +67,13 @@ export default function Sidebar() {
         background: "var(--sidebar-bg)",
         border: "1px solid var(--border)",
         borderRadius: 20,
-        margin: "20px 0 20px 20px",
+        margin: "10px 0 10px 10px",
         padding: "22px 12px 12px",
         display: "flex",
         flexDirection: "column",
         position: "sticky",
-        top: 20,
-        height: "calc(100vh - 40px)",
+        top: 10,
+        height: "calc(100vh - 20px)",
         transition: "width 0.18s ease",
         overflow: "hidden",
       }}
@@ -204,13 +204,14 @@ export default function Sidebar() {
               {!collapsed && isOpen && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}>
                   {item.children.map((child) => (
-                    <div key={child.to + child.label} style={{ paddingLeft: 34, maxWidth: "100%" }}>
+                    <div key={child.to + child.label} style={{ paddingLeft: 22, maxWidth: "100%" }}>
                       <NavLink
                         to={child.to}
                         className={({ isActive }) => `sidebar-subnav${isActive ? " sidebar-subnav-active" : ""}`}
                         style={{
-                          display: "inline-block",
-                          maxWidth: "100%",
+                          display: "block",
+                          boxSizing: "border-box",
+                          width: "100%",
                           padding: "9px 12px",
                           borderRadius: 999,
                           fontSize: 13,

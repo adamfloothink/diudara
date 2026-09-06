@@ -150,6 +150,62 @@ export const forumPosts = [
   },
 ];
 
+export const forumComments: Record<number, {
+  author: string;
+  time: string;
+  body: string;
+  likes: number;
+}[]> = {
+  1: [
+    {
+      author: "Pak Andi (Mentor)",
+      time: "1 jam lalu",
+      body: "Coba mulai dari substitusi u = sin x atau u = cos x tergantung bentuk soalnya. Nanti aku bahas lebih detail di sesi live Sabtu ya.",
+      likes: 8,
+    },
+    {
+      author: "Dimas Ardianto",
+      time: "50 menit lalu",
+      body: "Setuju, kemarin aku juga sempet kebingungan di soal yang sama. Contoh soal try out nomor 12 bisa jadi latihan bagus.",
+      likes: 3,
+    },
+    {
+      author: "Sari Wulandari",
+      time: "30 menit lalu",
+      body: "Makasih Pak Andi, ditunggu sesi Sabtunya!",
+      likes: 1,
+    },
+  ],
+  2: [
+    {
+      author: "Melati Anggraini",
+      time: "4 jam lalu",
+      body: "Boleh nih dicoba, aku juga lagi cari format jadwal yang pas buat 3 bulan terakhir.",
+      likes: 5,
+    },
+    {
+      author: "Rangga Putra",
+      time: "3 jam lalu",
+      body: "Share juga dong link templatenya kalau ada, Budi.",
+      likes: 2,
+    },
+  ],
+  3: [
+    {
+      author: "Dimas Ardianto",
+      time: "20 jam lalu",
+      body: "Mantap, aku daftar. Jam 19.00 WIB ya Pak?",
+      likes: 4,
+    },
+    {
+      author: "Pak Andi (Mentor)",
+      time: "18 jam lalu",
+      body: "Betul, jam 19.00 WIB di ruang live yang sama seperti biasa.",
+      likes: 6,
+    },
+  ],
+};
+
 export const contentLibrary = [
   {
     id: "week-1",
@@ -183,12 +239,42 @@ export const contentLibrary = [
 
 // Tab Kalender — gabungan jadwal live, event, dan materi pembelajaran
 export const calendarSchedule = [
-  { date: "10", month: "Sep", day: "Rabu", title: "Live Q&A — Fungsi Kuadrat", type: "live", time: "19:00 WIB" },
-  { date: "12", month: "Sep", day: "Jumat", title: "Live Q&A — Persiapan Try Out 3", type: "live", time: "19:00 WIB" },
-  { date: "14", month: "Sep", day: "Minggu", title: "Materi baru: Modul Kalkulus Dasar", type: "materi", time: "Rilis 08:00 WIB" },
-  { date: "15", month: "Sep", day: "Senin", title: "Kelas tambahan: Trigonometri lanjutan", type: "event", time: "16:00 WIB" },
-  { date: "18", month: "Sep", day: "Kamis", title: "Deadline kuis mingguan modul 3", type: "materi", time: "23:59 WIB" },
-  { date: "20", month: "Sep", day: "Sabtu", title: "Sesi motivasi bersama alumni", type: "event", time: "20:00 WIB" },
+  {
+    id: "live-qna-fungsi-kuadrat",
+    date: "10", month: "Sep", day: "Rabu", title: "Live Q&A — Fungsi Kuadrat", type: "live", time: "19:00 WIB",
+    description: "Sesi tanya-jawab langsung membahas soal-soal fungsi kuadrat yang sering keluar di try out. Bawa pertanyaanmu, langsung dijawab Pak Andi.",
+    hasLiveRoom: true,
+  },
+  {
+    id: "live-qna-tryout-3",
+    date: "12", month: "Sep", day: "Jumat", title: "Live Q&A — Persiapan Try Out 3", type: "live", time: "19:00 WIB",
+    description: "Pembahasan strategi mengerjakan try out 3 beserta tips manajemen waktu saat ujian. Sesi ini direkam dan bisa ditonton ulang di tab Dokumen.",
+    hasLiveRoom: true,
+  },
+  {
+    id: "materi-kalkulus-dasar",
+    date: "14", month: "Sep", day: "Minggu", title: "Materi baru: Modul Kalkulus Dasar", type: "materi", time: "Rilis 08:00 WIB",
+    description: "Modul minggu ke-3 berisi materi limit dan turunan, dilengkapi latihan soal integral. Otomatis muncul di tab Konten setelah rilis.",
+    hasLiveRoom: false,
+  },
+  {
+    id: "kelas-trigonometri-lanjutan",
+    date: "15", month: "Sep", day: "Senin", title: "Kelas tambahan: Trigonometri lanjutan", type: "event", time: "16:00 WIB",
+    description: "Kelas tatap muka daring khusus untuk member yang masih kesulitan di materi trigonometri lanjutan. Kuota terbatas, isi lewat form pendaftaran.",
+    hasLiveRoom: true,
+  },
+  {
+    id: "deadline-kuis-modul-3",
+    date: "18", month: "Sep", day: "Kamis", title: "Deadline kuis mingguan modul 3", type: "materi", time: "23:59 WIB",
+    description: "Batas akhir pengumpulan kuis mingguan modul 3. Kuis yang belum dikerjakan setelah waktu ini otomatis mendapat nilai 0.",
+    hasLiveRoom: false,
+  },
+  {
+    id: "sesi-motivasi-alumni",
+    date: "20", month: "Sep", day: "Sabtu", title: "Sesi motivasi bersama alumni", type: "event", time: "20:00 WIB",
+    description: "Sharing santai bersama alumni yang lolos SBMPTN tahun lalu — cerita perjuangan, tips belajar efektif, dan sesi tanya-jawab bebas.",
+    hasLiveRoom: false,
+  },
 ];
 
 // Tab Pengumuman — dibuat khusus oleh admin/mentor komunitas
@@ -243,12 +329,6 @@ export const members = [
   { name: "Dewi Anggraini", role: "Admin", status: "active", joined: "8 bulan lalu" },
   { name: "Fajar Nugroho", role: "Member", status: "pending", joined: "Baru bergabung" },
   { name: "Rina Kusuma", role: "Member", status: "churned", joined: "Berakhir 3 hari lalu" },
-];
-
-export const upcomingEvents = [
-  { date: "12 Sep", title: "Live Q&A — Persiapan Try Out 3", time: "19:00 WIB" },
-  { date: "15 Sep", title: "Kelas tambahan: Trigonometri lanjutan", time: "16:00 WIB" },
-  { date: "20 Sep", title: "Sesi motivasi bersama alumni", time: "20:00 WIB" },
 ];
 
 // Data dashboard creator — berbeda untuk masing-masing komunitas yang dikelola
@@ -387,4 +467,165 @@ export const paymentMethods = [
   { id: "ewallet", name: "E-Wallet", note: "GoPay, OVO, DANA, ShopeePay" },
   { id: "va", name: "Virtual Account", note: "BCA, Mandiri, BNI, BRI" },
   { id: "card", name: "Kartu Debit/Kredit", note: "Visa & Mastercard" },
+];
+
+// Floating private chat — daftar percakapan + riwayat pesan per percakapan
+export type ChatAttachment = { id: string; name: string; kind: "image" | "video" | "audio" | "file"; url?: string };
+export type ChatMessage = { sender: "me" | "them"; text: string; time: string; attachments?: ChatAttachment[] };
+
+export const conversations = [
+  {
+    id: "sari-wulandari",
+    name: "Sari Wulandari",
+    initials: "SW",
+    color: "var(--sinyal)",
+    online: true,
+    lastMessage: "Makasih banyak infonya kak 🙏",
+    time: "2m",
+    unread: 2,
+  },
+  {
+    id: "pak-andi",
+    name: "Pak Andi (Mentor)",
+    initials: "PA",
+    color: "var(--langit)",
+    online: true,
+    lastMessage: "Oke, nanti aku bahas di sesi live ya",
+    time: "1j",
+    unread: 0,
+  },
+  {
+    id: "dimas-ardianto",
+    name: "Dimas Ardianto",
+    initials: "DA",
+    color: "var(--hijau-lepas)",
+    online: false,
+    lastMessage: "Siap, sampai ketemu di kelas tambahan",
+    time: "3j",
+    unread: 0,
+  },
+  {
+    id: "melati-anggraini",
+    name: "Melati Anggraini",
+    initials: "MA",
+    color: "var(--kabut)",
+    online: false,
+    lastMessage: "Boleh dong, share link templatenya",
+    time: "1h",
+    unread: 1,
+  },
+];
+
+export const conversationMessages: Record<string, ChatMessage[]> = {
+  "sari-wulandari": [
+    { sender: "them", text: "Kak, izin nanya soal integral trigonometri kemarin", time: "10:02" },
+    { sender: "me", text: "Boleh, bagian mana yang masih bingung?", time: "10:05" },
+    { sender: "them", text: "Bagian substitusinya kak", time: "10:06" },
+    { sender: "me", text: "Coba mulai dari u = sin x dulu, nanti tak kirimin contoh soalnya", time: "10:09" },
+    { sender: "them", text: "Makasih banyak infonya kak 🙏", time: "10:11" },
+  ],
+  "pak-andi": [
+    { sender: "me", text: "Pak, sesi live tambahan Sabtu ini jadi jam berapa ya?", time: "09:10" },
+    { sender: "them", text: "Jam 19.00 WIB seperti biasa", time: "09:15" },
+    { sender: "them", text: "Oke, nanti aku bahas di sesi live ya", time: "09:16" },
+  ],
+  "dimas-ardianto": [
+    { sender: "them", text: "Kelas tambahan trigonometri jadi ikut kan?", time: "07:40" },
+    { sender: "me", text: "Jadi dong, aku daftar tadi malam", time: "07:42" },
+    { sender: "them", text: "Siap, sampai ketemu di kelas tambahan", time: "07:43" },
+  ],
+  "melati-anggraini": [
+    { sender: "them", text: "Kak, jadwal belajar yang kamu share di forum keren banget", time: "Kemarin" },
+    { sender: "me", text: "Makasih! Itu aku pakai dari awal semester", time: "Kemarin" },
+    { sender: "them", text: "Boleh dong, share link templatenya", time: "Kemarin" },
+  ],
+};
+
+// Feed komunitas — gabungan 5 tipe post: diskusi, pengumuman, konten (Materi), event (Kegiatan), anggota.
+// Pengumuman/konten/event hanya bisa dibuat & diedit oleh admin komunitas.
+export type FeedPostType = "diskusi" | "pengumuman" | "konten" | "event" | "anggota";
+
+export type FeedPost = {
+  id: string;
+  type: FeedPostType;
+  author: string;
+  time: string;
+  tag: string;
+  title: string;
+  body: string;
+  replies: number;
+  active?: boolean;
+  attachments?: ChatAttachment[];
+  /** Path relatif (tanpa /community/:id/) menuju halaman detail terkait, kalau ada. */
+  linkTo?: string;
+  // Khusus tipe "anggota" (undangan member baru)
+  inviteTarget?: string;
+  // Khusus tipe "konten" (Materi) — silabus/grouping materi
+  syllabus?: string;
+  // Khusus tipe "event"
+  eventDate?: string;
+  eventTime?: string;
+  eventLocation?: string;
+  hasLiveRoom?: boolean;
+};
+
+export const feedPosts: FeedPost[] = [
+  // Diskusi — mirror forumPosts, tautan ke halaman Detail Diskusi
+  ...forumPosts.map((p): FeedPost => ({
+    id: `diskusi-${p.id}`,
+    type: "diskusi",
+    author: p.author,
+    time: p.time,
+    tag: p.tag,
+    title: p.title,
+    body: p.body,
+    replies: p.replies,
+    active: p.active,
+    linkTo: `discussion/${p.id}`,
+  })),
+
+  // Pengumuman — mirror 2 pengumuman terbaru, tautan ke halaman Detail Pengumuman
+  ...announcements.slice(0, 2).map((a): FeedPost => ({
+    id: `pengumuman-${a.id}`,
+    type: "pengumuman",
+    author: a.author,
+    time: a.date,
+    tag: "Pengumuman",
+    title: a.title,
+    body: a.body,
+    replies: 0,
+    linkTo: `announcement/${a.id}`,
+  })),
+
+  // Konten (Materi) — info rilis materi baru, tautan ke tab Materi
+  {
+    id: "konten-week-3",
+    type: "konten",
+    author: "Pak Andi (Mentor)",
+    time: "1 hari lalu",
+    tag: "Materi",
+    title: "Materi baru: Minggu 3 — Kalkulus Dasar",
+    body: "Modul kalkulus dasar sudah tersedia, berisi materi limit, turunan, dan latihan soal integral.",
+    replies: 0,
+    linkTo: "?tab=Materi",
+  },
+
+  // Event (Kegiatan) — mirror dari calendarSchedule, tautan ke halaman Detail Event
+  ...calendarSchedule
+    .filter((e) => e.type !== "materi")
+    .map((e): FeedPost => ({
+      id: `event-${e.id}`,
+      type: "event",
+      author: "Pak Andi (Mentor)",
+      time: `${e.date} ${e.month}`,
+      tag: "Kegiatan",
+      title: e.title,
+      body: e.description,
+      replies: 0,
+      eventDate: `${e.date} ${e.month}`,
+      eventTime: e.time,
+      eventLocation: "Online via Zoom",
+      hasLiveRoom: e.hasLiveRoom,
+      linkTo: `event/${e.id}`,
+    })),
 ];

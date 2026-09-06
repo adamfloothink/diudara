@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFire, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { faFire, faArrowRight, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { communities, categories, trendingTags } from "../data/mock";
 import Header from "../components/layout/Header";
 import PageContainer from "../components/layout/PageContainer";
@@ -25,38 +25,43 @@ export default function Discover() {
         title="Discover"
         subtitle="Gabung komunitas yang cocok dengan minatmu"
         notificationCount={3}
-        actions={
-          <input
-            className="input"
-            placeholder="Cari komunitas, topik, atau mentor..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            style={{ width: 260, background: "var(--awan)" }}
-          />
-        }
       />
       <PageContainer>
-      {/* Category filters */}
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 28 }} className="scrollbar-none">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className="btn btn-sm"
-            style={{
-              background: activeCategory === cat ? "var(--langit)" : "var(--surface)",
-              color: activeCategory === cat ? "var(--awan)" : "var(--ink-700)",
-              border: activeCategory === cat ? "none" : "1px solid var(--ink-150)",
-              flexShrink: 0,
-            }}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 300px", gap: 20 }}>
         <div>
+          {/* Search bar */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+            <input
+              className="input"
+              placeholder="Cari komunitas, topik, atau mentor..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              style={{ flex: 1, background: "var(--awan)" }}
+            />
+            <button className="btn btn-primary" style={{ flexShrink: 0 }}>
+              <FontAwesomeIcon icon={faMagnifyingGlass} /> Cari Komunitas
+            </button>
+          </div>
+
+          {/* Category filters */}
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 28 }} className="scrollbar-none">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className="btn btn-sm"
+                style={{
+                  background: activeCategory === cat ? "var(--langit)" : "var(--surface)",
+                  color: activeCategory === cat ? "var(--awan)" : "var(--ink-700)",
+                  border: activeCategory === cat ? "none" : "1px solid var(--ink-150)",
+                  flexShrink: 0,
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           {/* Live now strip */}
           {liveNow.length > 0 && (
             <div style={{ marginBottom: 32 }}>

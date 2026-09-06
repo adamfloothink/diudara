@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faArrowLeft, faUserGroup } from "@fortawesome/free-solid-svg-icons";
 import { communities, tiers, paymentMethods } from "../data/mock";
 import Header from "../components/layout/Header";
 
@@ -23,6 +23,22 @@ export default function Checkout() {
       <Header title={`Checkout — ${community.name}`} subtitle={`${community.members} member · ${community.category}`} insetDivider={false} />
       <div style={{ display: "flex", justifyContent: "center", padding: 20 }}>
       <div style={{ width: "100%", maxWidth: 620 }}>
+        {/* Navigasi kembali */}
+        <div style={{ display: "flex", gap: 18, marginBottom: 22 }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: "var(--ink-500)", fontSize: 13, fontWeight: 600 }}
+          >
+            <FontAwesomeIcon icon={faArrowLeft} /> Kembali
+          </button>
+          <button
+            onClick={() => navigate(`/community/${community.id}`)}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: "var(--ink-500)", fontSize: 13, fontWeight: 600 }}
+          >
+            <FontAwesomeIcon icon={faUserGroup} /> Ke halaman komunitas
+          </button>
+        </div>
+
         {/* Step indicator */}
         {step !== "success" && (
           <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
